@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-Time Clock</title>
+  <style>
+    body {
+      background-color: #f1f1f1;
+      font-family: Arial, sans-serif;
+    }
+    
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+    }
+    
+    h1 {
+      font-size: 36px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    .menu-container {
+      margin-bottom: 20px;
+    }
+    
+    label {
+      font-size: 18px;
+      color: #666;
+      margin-right: 10px;
+    }
+    
+    #timezone-input {
+      padding: 5px;
+      font-size: 16px;
+      width: 200px;
+    }
+    
+    #timezone-select {
+      padding: 5px;
+      font-size: 16px;
+      width: 200px;
+    }
+    
+    #clock {
+      font-size: 80px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+    
+    #time-zone,
+    #country {
+      font-size: 18px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Real-Time Clock</h1>
+    <div class="menu-container">
+      <label for="timezone-input">Select Timezone:</label>
+      <input type="text" id="timezone-input" oninput="filterTimezones()" placeholder="Type to filter timezones">
+      <select id="timezone-select" onchange="changeTimezone()"></select>
+    </div>
+    
+    <div id="clock"></div>
+    <div id="time-zone"></div>
+    <div id="country"></div>
+  </div>
+
+  <script>
+    const timezones = [
+      { name: "America/Los_Angeles", offset: "-7:00", country: "United States" },
+      { name: "America/New_York", offset: "-4:00", country: "United States" },
+      { name: "America/Chicago", offset: "-5:00", country: "United States" },
+      { name: "America/Denver", offset: "-6:00", country: "United States" },
+      { name: "America/Toronto", offset: "-4:00", country: "Canada" },
+      { name: "Europe/London", offset: "+1:00", country: "United Kingdom" },
+      { name: "Europe/Paris", offset: "+2:00", country: "France" },
+      { name: "Europe/Berlin", offset: "+2:00", country: "Germany" },
+      { name: "Asia/Tokyo", offset: "+9:00", country: "Japan" },
+      { name: "Asia/Dubai", offset: "+4:00", country: "United Arab Emirates" },
+      { name: "Asia/Kolkata", offset: "+5:30", country: "India" },
+      { name: "Australia/Sydney", offset: "+10:00", country: "Australia" },
+      { name: "Pacific/Auckland", offset: "+12:00", country: "New Zealand" },
+      { name: "Africa/Johannesburg", offset: "+2:00", country: "South Africa" },
+      { name: "America/Mexico_City", offset: "-5:00", country: "Mexico" },
+      { name: "America/Buenos_Aires", offset: "-3:00", country: "Argentina" },
+      { name: "Asia/Shanghai", offset: "+8:00", country: "China" },
+      { name: "Asia/Seoul", offset: "+9:00", country: "South Korea" },
+      { name: "Asia/Singapore", offset: "+8:00", country: "Singapore" },
+      { name: "Asia/Riyadh", offset: "+3:00", country: "Saudi Arabia" },
+      { name: "Europe/Rome", offset: "+2:00", country: "Italy" },
+      { name: "Europe/Moscow", offset: "+3:00", country: "Russia" },
+      { name: "Europe/Zurich", offset: "+2:00", country: "Switzerland" }
+    ];
+
+    const timezoneSelect = document.getElementById("timezone-select");
+    const timezoneInput = document.getElementById("timezone-input");
+
+    function populateTimezones() {
+      timezones.forEach(timezone => {
+        const option = document.createElement("option");
+        option.value = timezone.name;
+        option.text = `${timezone.name} (${timezone.offset}) - ${timezone.country}`;
+        timezoneSelect.appendChild(option);
+      });
+    }
+
+    function changeTimezone() {
+      updateTime();
+    }
+
+    function filterTimezones() {
+      const filterValue = timezoneInput.value.toLowerCase();
+      const filteredTimezones = timezones.filter(timezone => {
+        return timezone.name.toLowerCase().includes(filterValue) ||
+          timezone.offset.includes(filterValue) ||
+          timezone.country.toLowerCase().includes(filterValue);
+      });
+
+      timezoneSelect.innerHTML = "";
+      filteredTimezones.forEach(timezone => {
+        const option = document.createElement("option");
+        option.value = timezone.name;
+        option.text = `${timezone.name} (${timezone.offset}) - ${timezone.country}`;
+        timezoneSelect.appendChild(option);
+      });
+
+      if (filteredTimezones.length > 0) {
+        updateTime();
+      } else {
+        clearClock();
+      }
+    }
+
+    function updateTime() {
+      var now = new Date();
+      var hours = now.getHours();
+      var minutes = now.getMinutes();
+      var seconds = now.getSeconds();
+
+      var selectedTimezone = timezoneSelect.value || Intl.DateTimeFormat().resolvedOptions().timeZone;
+      var selectedTimezoneInfo = timezones.find(timezone => timezone.name === selectedTimezone);
+
+      if (selectedTimezoneInfo) {
+        var timeOffset = selectedTimezoneInfo.offset;
+        var country = selectedTimezoneInfo.country;
+
+        now.setHours(now.getHours() + Number(timeOffset.split(":")[0]));
+        now.setMinutes(now.getMinutes() + Number(timeOffset.split(":")[1]));
+
+        hours = now.getHours();
+        minutes = now.getMinutes();
+        seconds = now.getSeconds();
+
+        hours = ("0" + hours).slice(-2);
+        minutes = ("0" + minutes).slice(-2);
+        seconds = ("0" + seconds).slice(-2);
+
+        var timeString = hours + ":" + minutes + ":" + seconds;
+        document.getElementById("clock").textContent = timeString;
+
+        var timeZoneString = "Time Zone: " + timeOffset;
+        document.getElementById("time-zone").textContent = timeZoneString;
+
+        document.getElementById("country").textContent = "Country: " + country;
+      }
+    }
+
+    function clearClock() {
+      document.getElementById("clock").textContent = "";
+      document.getElementById("time-zone").textContent = "";
+      document.getElementById("country").textContent = "";
+    }
+
+    populateTimezones();
+    filterTimezones();
+    timezoneInput.focus();
+    timezoneInput.addEventListener("input", filterTimezones);
+    timezoneSelect.addEventListener("change", changeTimezone);
+    setInterval(updateTime, 1000);
+  </script>
+</body>
+</html>
